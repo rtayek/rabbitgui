@@ -12,8 +12,7 @@ import static com.tayek.tablet.io.IO.*;
 public class ControllerTestCase {
     @BeforeClass public static void setUpBeforeClass() throws Exception {
         LoggingHandler.init();
-        InetAddress inetAddress=IO.runAndWait(new GetNetworkInterfacesCallable("192.168.1.2"));
-        group=new Group(inetAddress,1,Group.groups.get("g2"));
+        group=new Group(1,Group.groups.get("g2"));
     }
     @AfterClass public static void tearDownAfterClass() throws Exception {}
     @Before public void setUp() throws Exception {
@@ -25,12 +24,12 @@ public class ControllerTestCase {
     }
     
     @Test public void testController() throws InterruptedException, IOException {
-        String input="s\nb 1 true\np\nh\na\na\nc\nc\ng\ng\nr\nt\nq\n";
+        String input="s\nb 1\np\nh\na\na\nc\nc\ng\ng\nr\nt\nq\n";
         InputStream bais=new ByteArrayInputStream(input.getBytes());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
         //System.out.println("ps="+ps);
-        controller=new Controller(tablet,bais,ps);
+        controller=new C2(tablet,bais,ps);
         controller.run();
         Thread.sleep(10);
         ps.flush();
@@ -38,7 +37,7 @@ public class ControllerTestCase {
         assertTrue(baos.toString().contains("{TFFFFFFFFFF}"));
     }
     Tablet tablet;
-    Controller controller;
+    C2 controller;
     static Group group;
     static Map<Integer,Info> info;
 }

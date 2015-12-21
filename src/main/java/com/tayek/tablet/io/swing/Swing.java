@@ -203,35 +203,35 @@ public class Swing extends MainGui implements View,ActionListener {
         gui.run();
         return gui;
     }
-    public static void run2()  {
-        
-    }
+    public static void run2() {}
     public static void main(String[] argumentss) throws Exception {
         // System.gc();
         LoggingHandler.loggers.add(Swing.class);
         LoggingHandler.setLevel(Level.OFF);
-        InetAddress localhost=InetAddress.getLocalHost();
-        p("localhost: "+localhost);
-        String host=InetAddress.getLocalHost().getHostName();
-        p("host name: "+host);
-        InetAddress inetAddress=IO.runAndWait(new GetNetworkInterfacesCallable(host));
-        p("inetAddress: "+inetAddress);
-        // just 
+        // looks like we can't run with the real tablets anymore :(
         if(true) {
-            // push network prefix down into group or remove it from group info.
-            // i.e. just have group info have last byte of ip address.
-            inetAddress=InetAddress.getByName("192.168.1.2");
-            Group group=new Group(inetAddress,1,Group.groups.get("g0"));
-            Tablet tablet=group.getTablet(inetAddress);
+            InetAddress inetAddress=null;
+            try {
+                inetAddress=IO.runAndWait(new GetNetworkInterfacesCallable(IO.testingNetworkPrefix));
+                // could check for more subnets provided group info stored the entire ip address.
+                // what about the log server host address?
+            } catch(Exception e) {}
+            if(inetAddress==null) {
+                p("quiting, can not find inet address!");
+                return;
+            }
+            p("inetAddress: "+inetAddress);
+            Group group=new Group(1,Group.groups.get("g2"));
+            Tablet tablet=group.getTablet(inetAddress,null);
+            p("tablet: "+tablet);
             tablet.model.addObserver(create(tablet));
             tablet.model.addObserver(new AudioObserver(tablet.model));
             tablet.group.io.startListening(tablet);
         } else {
-            inetAddress=InetAddress.getByName("192.168.0.2");
-            Group group=new Group(inetAddress,1,Group.groups.get("g2"));
+            Group group=new Group(1,Group.groups.get("g2"));
             for(Iterator<Integer> i=group.tablets().iterator();i.hasNext();) {
                 int tabletId=i.next();
-                group=new Group(inetAddress,1,Group.groups.get("g2"));
+                group=new Group(1,Group.groups.get("g2"));
                 Tablet tablet=new Tablet(group,tabletId);
                 tablet.model.addObserver(create(tablet));
                 tablet.model.addObserver(new AudioObserver(tablet.model));
