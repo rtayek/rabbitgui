@@ -9,6 +9,6 @@ repositories {
 
 }
 dependencies {
-    compile 'core:rabbit:1.0'
+    //compile 'core:rabbit:1.0'
     testCompile 'junit:junit:4.12'
 }

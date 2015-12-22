@@ -209,6 +209,7 @@ public class Swing extends MainGui implements View,ActionListener {
         LoggingHandler.loggers.add(Swing.class);
         LoggingHandler.setLevel(Level.OFF);
         // looks like we can't run with the real tablets anymore :(
+        // this is a routing problem mostly
         if(true) {
             InetAddress inetAddress=null;
             try {
