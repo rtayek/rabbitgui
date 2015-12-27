@@ -89,14 +89,23 @@ public class Swing extends MainGui implements View,ActionListener {
                 }
             }
         };
+        Font font=null;
         for(int i=0;i<colors.rows*colors.columns;i++) {
-            JButton button=new JButton(""+(i+1));
+            JButton button=new JButton();
+            button.setText(tablet.getButtonText(i+1));
             button.setName(""+i); // name starts at zero, text starts at one!
             left.add(button,i);
             button.addActionListener(actionListener);
             button.setBackground(new Color(colors.color(i,false)));
             button.setPreferredSize(new Dimension(size,size));
+            if(i==0) {
+                font=button.getFont();
+                int fontsize=font.getSize();
+                font=new Font(font.getFontName(),font.getStyle(),3*fontsize);
+            }
+            button.setFont(font);
             buttons[i]=button;
+            buttons[i].setFont(font);
         }
         box.add(left);
         JPanel middle=new JPanel();
@@ -114,10 +123,11 @@ public class Swing extends MainGui implements View,ActionListener {
         right.setLayout(new GridLayout(colors.rows,1,10,10));
         // right.setBorder(BorderFactory.createLineBorder(Color.green));
         JButton button=new JButton();
+        button.setText(tablet.getButtonText(tablet.model.resetButtonId));
         button.setBackground(new Color(colors.color(colors.rows*colors.columns,false)));
         buttons[colors.rows*colors.columns]=button;
         button.setText("R");
-        // button.setFont(serif);
+        button.setFont(font);
         button.setName(""+(colors.rows*colors.columns));
         button.addActionListener(actionListener);
         button.setMinimumSize(new Dimension(size,size));
@@ -210,7 +220,7 @@ public class Swing extends MainGui implements View,ActionListener {
         LoggingHandler.setLevel(Level.OFF);
         // looks like we can't run with the real tablets anymore :(
         // this is a routing problem mostly
-        if(true) {
+        if(false) {
             InetAddress inetAddress=null;
             try {
                 inetAddress=IO.runAndWait(new GetNetworkInterfacesCallable(IO.testingNetworkPrefix));
