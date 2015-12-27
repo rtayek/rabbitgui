@@ -13,6 +13,14 @@ task wrapper(type: Wrapper) {
 }
 
 dependencies {
-    //compile 'core:rabbit:1.0'
+    compile 'core:rabbit:1.0'
     testCompile 'junit:junit:4.12'
 }
+
+jar {
+    manifest { attributes 'Main-Class': MyStuff.main }
+}
+class MyStuff {
+    public static final String main='com.tayek.tablet.Main'
+}
+
