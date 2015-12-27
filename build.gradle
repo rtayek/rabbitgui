@@ -8,6 +8,10 @@ repositories {
     //}
 
 }
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.9'
+}
+
 dependencies {
     //compile 'core:rabbit:1.0'
     testCompile 'junit:junit:4.12'
