@@ -220,10 +220,11 @@ public class Swing extends MainGui implements View,ActionListener {
         LoggingHandler.setLevel(Level.OFF);
         // looks like we can't run with the real tablets anymore :(
         // this is a routing problem mostly
-        if(false) {
+        // we should be able to run on the laptop just fine.
+        if(true) {
             InetAddress inetAddress=null;
             try {
-                inetAddress=IO.runAndWait(new GetNetworkInterfacesCallable(IO.testingNetworkPrefix));
+                inetAddress=IO.runAndWait(new GetNetworkInterfacesCallable(IO.defaultLogServerHost));
                 // could check for more subnets provided group info stored the entire ip address.
                 // what about the log server host address?
             } catch(Exception e) {}
@@ -231,8 +232,8 @@ public class Swing extends MainGui implements View,ActionListener {
                 p("quiting, can not find inet address!");
                 return;
             }
-            p("inetAddress: "+inetAddress);
-            Group group=new Group(1,Group.groups.get("g2"));
+            p("found inetAddress: "+inetAddress);
+            Group group=new Group(1,Group.groups.get("g0"));
             Tablet tablet=group.getTablet(inetAddress,null);
             p("tablet: "+tablet);
             tablet.model.addObserver(create(tablet));
