@@ -224,7 +224,7 @@ public class Swing extends MainGui implements View,ActionListener {
         if(true) {
             InetAddress inetAddress=null;
             try {
-                inetAddress=IO.runAndWait(new GetNetworkInterfacesCallable(IO.defaultLogServerHost));
+                inetAddress=IO.runAndWait(new GetNetworkInterfacesCallable(IO.defaultNetworkPrefix));
                 // could check for more subnets provided group info stored the entire ip address.
                 // what about the log server host address?
             } catch(Exception e) {}
