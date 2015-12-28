@@ -12,6 +12,7 @@ import javax.swing.border.EmptyBorder;
 import com.tayek.io.*;
 import com.tayek.io.swing.*;
 import com.tayek.tablet.*;
+import com.tayek.tablet.Group.Info;
 import com.tayek.tablet.Tablet.MenuItem;
 import com.tayek.tablet.io.*;
 import com.tayek.tablet.io.IO.GetNetworkInterfacesCallable;
@@ -213,16 +214,27 @@ public class Swing extends MainGui implements View,ActionListener {
         gui.run();
         return gui;
     }
-    public static void run2() {}
-    public static void main(String[] argumentss) throws Exception {
+    public static void run2(String[] arguments) throws UnknownHostException {
+        InetAddress inetAddress=InetAddress.getByName(arguments[0]);
+        Map<Integer,Info> info=new TreeMap<>(Group.groups.get("g0"));
+        int tabletId=4;
+        info.put(tabletId,new Info("pc-4",inetAddress.getHostAddress(),IO.defaultReceivePort));
+        Group group=new Group(1,info);
+        Tablet tablet=new Tablet(group,tabletId);
+        tablet.model.addObserver(create(tablet));
+        tablet.model.addObserver(new AudioObserver(tablet.model));
+        tablet.group.io.startListening(tablet);
+    }
+    public static void main(String[] arguments) throws Exception {
         // System.gc();
         LoggingHandler.loggers.add(Swing.class);
         LoggingHandler.setLevel(Level.OFF);
         // looks like we can't run with the real tablets anymore :(
         // this is a routing problem mostly
         // we should be able to run on the laptop just fine.
-        if(true) {
-            InetAddress inetAddress=null;
+        InetAddress inetAddress=null;
+        if(arguments!=null&&arguments.length>0) run2(arguments);
+        else if(true) {
             try {
                 inetAddress=IO.runAndWait(new GetNetworkInterfacesCallable(IO.defaultNetworkPrefix));
                 // could check for more subnets provided group info stored the entire ip address.
@@ -230,11 +242,17 @@ public class Swing extends MainGui implements View,ActionListener {
             } catch(Exception e) {}
             if(inetAddress==null) {
                 p("quiting, can not find inet address!");
+                printThreads();
                 return;
             }
             p("found inetAddress: "+inetAddress);
             Group group=new Group(1,Group.groups.get("g0"));
             Tablet tablet=group.getTablet(inetAddress,null);
+            if(tablet==null) {
+                p("quiting, can not get tablet!");
+                printThreads();
+                return;
+            }
             p("tablet: "+tablet);
             tablet.model.addObserver(create(tablet));
             tablet.model.addObserver(new AudioObserver(tablet.model));
