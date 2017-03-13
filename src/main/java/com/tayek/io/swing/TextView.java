@@ -1,5 +1,4 @@
 package com.tayek.io.swing;
-import static com.tayek.tablet.io.IO.*;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.io.PrintStream;
@@ -9,6 +8,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import com.tayek.utilities.Tee;
+import static com.tayek.io.IO.*;
 @SuppressWarnings("serial") public class TextView extends JPanel {
     public TextView(String prefix) {
         taOutputStream=new TextAreaOutputStream(textArea,prefix);

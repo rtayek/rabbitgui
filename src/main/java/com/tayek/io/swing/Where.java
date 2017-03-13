@@ -1,5 +1,5 @@
 package com.tayek.io.swing;
-import static com.tayek.tablet.io.IO.p;
+import static com.tayek.io.IO.*;
 import static java.lang.Math.*;
 import java.awt.*;
 import java.util.*;

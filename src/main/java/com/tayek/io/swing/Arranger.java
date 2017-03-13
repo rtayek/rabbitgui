@@ -3,7 +3,7 @@ import java.awt.*;
 import java.util.*;
 import javax.swing.*;
 import com.tayek.io.swing.*;
-import static com.tayek.tablet.io.IO.*;
+import static com.tayek.io.IO.*;
 import static java.lang.Math.*;
 // shapes, colors, styles, arrangement
 public class Arranger extends MainGui {

@@ -1,5 +1,5 @@
 package com.tayek.io.swing;
-import static com.tayek.tablet.io.IO.*;
+import static com.tayek.io.IO.*;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

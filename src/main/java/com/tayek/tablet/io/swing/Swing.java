@@ -1,22 +1,23 @@
 package com.tayek.tablet.io.swing;
-import static com.tayek.tablet.io.IO.*;
 import static java.lang.Math.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.*;
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.logging.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import com.tayek.*;
 import com.tayek.io.*;
 import com.tayek.io.swing.*;
 import com.tayek.tablet.*;
-import com.tayek.tablet.Group.Info;
-import com.tayek.tablet.Tablet.MenuItem;
+import com.tayek.tablet.Group.*;
+import com.tayek.tablet.MessageReceiver.Model;
 import com.tayek.tablet.io.*;
-import com.tayek.tablet.io.IO.GetNetworkInterfacesCallable;
-public class Swing extends MainGui implements View,ActionListener {
+import com.tayek.tablet.io.GuiAdapter.GuiAdapterABC;
+import static com.tayek.io.IO.*;
+import com.tayek.utilities.*;
+public class Swing extends MainGui implements Observer,ActionListener {
     // http://www.javaknowledge.info/android-like-toast-using-java-swing/
     private Swing(Tablet tablet) {
         super();
@@ -44,7 +45,7 @@ public class Swing extends MainGui implements View,ActionListener {
         JMenuBar jMenuBar=createMenuBar();
         frame.setJMenuBar(jMenuBar);
         JPanel top=new JPanel();
-        JLabel topLabel=new JLabel(tablet.name());
+        JLabel topLabel=new JLabel(tablet.tabletId());
         Font current=topLabel.getFont();
         // p(topLabel.getFont().toString());
         add(top,BorderLayout.PAGE_START);
@@ -53,7 +54,7 @@ public class Swing extends MainGui implements View,ActionListener {
         topLabel.setFont(small);
         top.add(topLabel);
         JPanel bottom=new JPanel();
-        JLabel bottomLabel=new JLabel("bottom");
+        /*JLabel*/ bottomLabel=new JLabel("bottom");
         bottomLabel.setFont(small);
         bottom.add(bottomLabel);
         add(bottom,BorderLayout.PAGE_END);
@@ -93,7 +94,9 @@ public class Swing extends MainGui implements View,ActionListener {
         Font font=null;
         for(int i=0;i<colors.rows*colors.columns;i++) {
             JButton button=new JButton();
-            button.setText(tablet.getButtonText(i+1));
+            if(i/colors.columns%2==0)
+                button.setText(""+(char)('0'+(i+1)));
+            else button.setText("");
             button.setName(""+i); // name starts at zero, text starts at one!
             left.add(button,i);
             button.addActionListener(actionListener);
@@ -124,10 +127,11 @@ public class Swing extends MainGui implements View,ActionListener {
         right.setLayout(new GridLayout(colors.rows,1,10,10));
         // right.setBorder(BorderFactory.createLineBorder(Color.green));
         JButton button=new JButton();
-        button.setText(tablet.getButtonText(tablet.model.resetButtonId));
+        if(tablet.model().resetButtonId!=null)
+            button.setText("R");
         button.setBackground(new Color(colors.color(colors.rows*colors.columns,false)));
         buttons[colors.rows*colors.columns]=button;
-        button.setText("R");
+        //button.setText("R");
         button.setFont(font);
         button.setName(""+(colors.rows*colors.columns));
         button.addActionListener(actionListener);
@@ -143,14 +147,14 @@ public class Swing extends MainGui implements View,ActionListener {
     }
     ActionListener actionListener;
     @Override public void update(Observable o,Object hint) {
-        if(o instanceof Model&&o.equals(tablet.model)) guiAdapter.update(o,hint);
+        if(o instanceof Model&&o.equals(tablet.model())) guiAdapter.update(o,hint);
         else l.warning("not a model or not our model!");
     }
     @Override public void actionPerformed(ActionEvent e) {
         l.info("action performed: "+e);
-        MenuItem x=MenuItem.valueOf(e.getActionCommand());
+        Enums.MenuItem x=Enums.MenuItem.valueOf(e.getActionCommand());
         if(x!=null) {
-            if(x.equals(MenuItem.Log)) { // no text view on android
+            if(x.equals(Enums.MenuItem.Log)) { // no text view on android
                 if(textView!=null) textView.frame.setVisible(!textView.frame.isVisible());
                 else l.info("no log window to toggle!");
             } else x.doItem(tablet);
@@ -163,7 +167,7 @@ public class Swing extends MainGui implements View,ActionListener {
         menu.getAccessibleContext().setAccessibleDescription("Options menu");
         // Reset,Ping,Disconnect,Connect,Log;
         JMenuItem menuItem=null;
-        for(MenuItem x:MenuItem.values()) {
+        for(Enums.MenuItem x:Enums.MenuItem.values()) {
             menuItem=new JMenuItem(x.name());
             int vk=(KeyEvent.VK_A-1)+(x.name().toUpperCase().charAt(0)-'A');
             menuItem.setAccelerator(KeyStroke.getKeyStroke(vk,ActionEvent.ALT_MASK));
@@ -181,8 +185,8 @@ public class Swing extends MainGui implements View,ActionListener {
         menuBar.add(menu);
         return menuBar;
     }
-    static GuiAdapterABC create(final Tablet tablet,final Swing gui) {
-        GuiAdapterABC adapter=new GuiAdapterABC(tablet) {
+    static GuiAdapterABC createGuiAdapter(final Tablet tablet,final Swing gui) {
+        GuiAdapterABC adapter=new GuiAdapterABC(tablet.model()) {
             @Override public void setButtonText(final int id,final String string) {
                 final Integer index=id-1; // model uses 1-n
                 if(SwingUtilities.isEventDispatchThread()) {
@@ -205,72 +209,56 @@ public class Swing extends MainGui implements View,ActionListener {
                     }
                 });
             }
+            @Override public void setStatusText(String string) {
+                // TODO Auto-generated method stub
+                p("what do i do here?");
+                gui.bottomLabel.setText(string);
+                
+            }
         };
         return adapter;
     }
-    public static Swing create(final Tablet tablet) { // subclass instead
+    public static Swing createGui(final Tablet tablet) { // subclass instead
         final Swing gui=new Swing(tablet);
-        gui.guiAdapter=create(tablet,gui);
+        gui.guiAdapter=createGuiAdapter(tablet,gui);
         gui.run();
         return gui;
     }
-    public static void run2(String[] arguments) throws UnknownHostException {
-        InetAddress inetAddress=InetAddress.getByName(arguments[0]);
-        Map<Integer,Info> info=new TreeMap<>(Group.groups.get("g0"));
-        int tabletId=4;
-        info.put(tabletId,new Info("pc-4",inetAddress.getHostAddress(),IO.defaultReceivePort));
-        Group group=new Group(1,info);
-        Tablet tablet=new Tablet(group,tabletId);
-        tablet.model.addObserver(create(tablet));
-        tablet.model.addObserver(new AudioObserver(tablet.model));
-        tablet.group.io.startListening(tablet);
-    }
     public static void main(String[] arguments) throws Exception {
-        // System.gc();
+        InetAddress inetAddress=null;
         LoggingHandler.loggers.add(Swing.class);
         LoggingHandler.setLevel(Level.OFF);
-        // looks like we can't run with the real tablets anymore :(
-        // this is a routing problem mostly
-        // we should be able to run on the laptop just fine.
-        InetAddress inetAddress=null;
-        if(arguments!=null&&arguments.length>0) run2(arguments);
-        else if(true) {
-            try {
-                inetAddress=IO.runAndWait(new GetNetworkInterfacesCallable(IO.defaultNetworkPrefix));
-                // could check for more subnets provided group info stored the entire ip address.
-                // what about the log server host address?
-            } catch(Exception e) {}
-            if(inetAddress==null) {
-                p("quiting, can not find inet address!");
-                printThreads();
-                return;
-            }
-            p("found inetAddress: "+inetAddress);
-            Group group=new Group(1,Group.groups.get("g0"));
-            Tablet tablet=group.getTablet(inetAddress,null);
-            if(tablet==null) {
-                p("quiting, can not get tablet!");
-                printThreads();
-                return;
-            }
-            p("tablet: "+tablet);
-            tablet.model.addObserver(create(tablet));
-            tablet.model.addObserver(new AudioObserver(tablet.model));
-            tablet.group.io.startListening(tablet);
-        } else {
-            Group group=new Group(1,Group.groups.get("g2"));
-            for(Iterator<Integer> i=group.tablets().iterator();i.hasNext();) {
-                int tabletId=i.next();
-                group=new Group(1,Group.groups.get("g2"));
-                Tablet tablet=new Tablet(group,tabletId);
-                tablet.model.addObserver(create(tablet));
-                tablet.model.addObserver(new AudioObserver(tablet.model));
-                tablet.group.io.startListening(tablet);
-            }
+        // probably should get local host and get host address like run2 
+        final Map<String,Required> g2OnPc=new TreeMap<>(); // newer version of g2OnPc
+        inetAddress=InetAddress.getLocalHost();
+        p("address: "+inetAddress);
+        p("host address: "+inetAddress.getHostAddress());
+        int n=2;
+        for(int i=1;i<=n;i++) 
+            Groups.add(inetAddress.getHostAddress(),defaultReceivePort+i,g2OnPc);
+        Group group=new Group("1",g2OnPc,Model.mark1);
+        Set<Tablet> tablets=new LinkedHashSet<>();
+        for(Iterator<String> i=group.keys().iterator();i.hasNext();) {
+            String tabletId=i.next();
+            group=new Group("1",group.idToRequired,Model.mark1);
+            Tablet tablet=Tablet.factory.create(Tablet.Type.normal,group,tabletId,group.getModelClone());
+            tablets.add(tablet);
+            Swing gui=createGui(tablet);
+            gui.guiAdapter.setTablet(tablet); // explicit!. no run loop
+            tablet.model().addObserver(gui);
+            tablet.model().addObserver(new Audio.AudioObserver(tablet.model()));
+            p("starting tablet: "+tabletId);
+            tablet.startServer();
         }
+        Tablet first=tablets.iterator().next();
+        for(Tablet tablet:tablets) 
+            if(tablet!=first)
+                if(tablet.model()==first.model())
+                    throw new RuntimeException("oops");
     }
     final Colors colors=new Colors();
     final Tablet tablet;
+    JLabel bottomLabel;
     final AbstractButton[] buttons;
     int buttonSize=100;
     public /* final */ GuiAdapterABC guiAdapter;

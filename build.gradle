@@ -15,7 +15,7 @@ task wrapper(type: Wrapper) {
 }
 
 dependencies {
-    compile 'core:rabbit:1.0'
+    //compile 'core:rabbit:1.0' // broken. maybe no need to have gradle build this now.
     testCompile 'junit:junit:4.12'
 }
 
